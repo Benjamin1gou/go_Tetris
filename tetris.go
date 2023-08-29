@@ -31,7 +31,7 @@ const (
 	Cyan                // シアン色
 )
 
-// テトロミノの形状を定義
+// テトリスミノの形状を定義
 var tetrominoShapes = [][][][]Color{
 	// I形状
 	{
@@ -89,15 +89,15 @@ var tetrominoShapes = [][][][]Color{
 	},
 }
 
-// テトロミノを表す構造体
+// テトリスミノを表す構造体
 type Tetromino struct {
-	x, y         int       // テトロミノの座標
+	x, y         int       // テトリスミノの座標
 	shapeIndex   int       // 形状のインデックス
 	rotation     int       // 回転の状態
 	currentShape [][]Color // 現在の形状
 }
 
-// 新しいテトロミノを生成する関数
+// 新しいテトリスミノを生成する関数
 func NewTetromino() *Tetromino {
 	t := &Tetromino{
 		x:          boardWidth/2 - 2,                // 初期位置をボードの中央に設定
@@ -111,10 +111,12 @@ func NewTetromino() *Tetromino {
 // ゲーム全体を管理する構造体
 type Game struct {
 	board            [boardHeight][boardWidth]Color // ゲームボード
-	currentTetromino *Tetromino                     // 現在操作しているテトロミノ
+	currentTetromino *Tetromino                     // 現在操作しているテトリスミノ
+	currentFrame     int                            // フレーム数
+	dropInterval     int                            // インターバル
 }
 
-// テトロミノが他のブロックや壁と衝突するか判定する関数
+// テトリスミノが他のブロックや壁と衝突するか判定する関数
 func (g *Game) collision(t *Tetromino, x, y int) bool {
 	for rowIdx, row := range t.currentShape {
 		for colIdx, cell := range row {
@@ -131,7 +133,7 @@ func (g *Game) collision(t *Tetromino, x, y int) bool {
 	return false
 }
 
-// テトロミノをボード上に配置する関数
+// テトリスミノをボード上に配置する関数
 func (g *Game) placeTetromino() {
 	for rowIdx, row := range g.currentTetromino.currentShape {
 		for colIdx, cell := range row {
@@ -142,7 +144,7 @@ func (g *Game) placeTetromino() {
 	}
 	g.currentTetromino = NewTetromino()
 	if g.collision(g.currentTetromino, g.currentTetromino.x, g.currentTetromino.y) {
-		// 新しいテトロミノが配置できない場合はゲームをリセット
+		// 新しいテトリスミノが配置できない場合はゲームをリセット
 		g.board = [boardHeight][boardWidth]Color{}
 	}
 }
@@ -172,17 +174,29 @@ func (g *Game) clearLines() {
 
 // ゲームの状態を更新する関数（毎フレーム呼ばれる）
 func (g *Game) Update() error {
+
+	g.currentFrame++
+	if g.currentFrame >= g.dropInterval {
+		if !g.collision(g.currentTetromino, g.currentTetromino.x, g.currentTetromino.y+1) {
+			g.currentTetromino.y++
+		} else {
+			g.placeTetromino()
+			g.clearLines()
+		}
+		g.currentFrame = 0
+	}
+
 	if ebiten.IsKeyPressed(ebiten.KeyRight) && !g.collision(g.currentTetromino, g.currentTetromino.x+1, g.currentTetromino.y) {
-		g.currentTetromino.x++ // 右キーが押されたら、テトロミノを右に1移動
+		g.currentTetromino.x++ // 右キーが押されたら、テトリスミノを右に1移動
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyLeft) && !g.collision(g.currentTetromino, g.currentTetromino.x-1, g.currentTetromino.y) {
-		g.currentTetromino.x-- // 左キーが押されたら、テトロミノを左に1移動
+		g.currentTetromino.x-- // 左キーが押されたら、テトリスミノを左に1移動
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyDown) && !g.collision(g.currentTetromino, g.currentTetromino.x, g.currentTetromino.y+1) {
-		g.currentTetromino.y++ // 下キーが押されたら、テトロミノを下に1移動
+		g.currentTetromino.y++ // 下キーが押されたら、テトリスミノを下に1移動
 	}
 	if ebiten.IsKeyPressed(ebiten.KeyUp) {
-		g.currentTetromino.rotation = (g.currentTetromino.rotation + 1) % len(tetrominoShapes[g.currentTetromino.shapeIndex]) // 上キーが押されたら、テトロミノを回転
+		g.currentTetromino.rotation = (g.currentTetromino.rotation + 1) % len(tetrominoShapes[g.currentTetromino.shapeIndex]) // 上キーが押されたら、テトリスミノを回転
 		g.currentTetromino.currentShape = tetrominoShapes[g.currentTetromino.shapeIndex][g.currentTetromino.rotation]         // 回転後の形状を現在の形状に設定
 		if g.collision(g.currentTetromino, g.currentTetromino.x, g.currentTetromino.y) {
 			g.currentTetromino.rotation-- // 回転後に衝突する場合、回転を1つ前に戻す
@@ -193,7 +207,7 @@ func (g *Game) Update() error {
 		}
 	}
 	if g.collision(g.currentTetromino, g.currentTetromino.x, g.currentTetromino.y+1) {
-		g.placeTetromino() // 下に移動すると衝突する場合、テトロミノをボードに固定
+		g.placeTetromino() // 下に移動すると衝突する場合、テトリスミノをボードに固定
 		g.clearLines()     // 完成したラインを消去
 	}
 	return nil
@@ -209,7 +223,7 @@ func (g *Game) Draw(screen *ebiten.Image) {
 	for y, row := range g.currentTetromino.currentShape {
 		for x, cell := range row {
 			if cell != Empty {
-				drawCell(screen, g.currentTetromino.x+x, g.currentTetromino.y+y, cell) // 現在動かしているテトロミノの各セルを描画
+				drawCell(screen, g.currentTetromino.x+x, g.currentTetromino.y+y, cell) // 現在動かしているテトリスミノの各セルを描画
 			}
 		}
 	}
@@ -250,7 +264,8 @@ func (g *Game) Layout(outsideWidth, outsideHeight int) (int, int) {
 func main() {
 	rand.Seed(time.Now().UnixNano()) // 乱数のシードを設定
 	game := &Game{                   // Gameの新しいインスタンスを作成
-		currentTetromino: NewTetromino(), // 初期のテトロミノを設定
+		currentTetromino: NewTetromino(), // 初期のテトリスミノを設定
+		dropInterval:     60,             // 落下インターバルのフレーム数を設定
 	}
 	ebiten.RunGame(game) // ゲームループを開始
 }
