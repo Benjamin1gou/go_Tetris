@@ -55,8 +55,22 @@ var tetrominoShapes = [][][][]Color{
 	// T形状
 	{
 		{
+			{0, Purple, 0},
+			{Purple, Purple, Purple},
+		},
+		{
+			{0, Purple},
+			{Purple, Purple},
+			{0, Purple},
+		},
+		{
 			{Purple, Purple, Purple},
 			{0, Purple, 0},
+		},
+		{
+			{Purple, 0},
+			{Purple, Purple},
+			{Purple, 0},
 		},
 	},
 	// S形状
@@ -65,12 +79,22 @@ var tetrominoShapes = [][][][]Color{
 			{0, Green, Green},
 			{Green, Green, 0},
 		},
+		{
+			{Green, 0},
+			{Green, Green},
+			{0, Green},
+		},
 	},
 	// Z形状
 	{
 		{
 			{Red, Red, 0},
 			{0, Red, Red},
+		},
+		{
+			{0, Red},
+			{Red, Red},
+			{Red, 0},
 		},
 	},
 	// J形状
@@ -79,12 +103,40 @@ var tetrominoShapes = [][][][]Color{
 			{Blue, 0, 0},
 			{Blue, Blue, Blue},
 		},
+		{
+			{Blue, Blue},
+			{Blue, 0},
+			{Blue, 0},
+		},
+		{
+			{Blue, Blue, Blue},
+			{0, 0, Blue},
+		},
+		{
+			{0, Blue},
+			{0, Blue},
+			{Blue, Blue},
+		},
 	},
 	// L形状
 	{
 		{
 			{0, 0, Orange},
 			{Orange, Orange, Orange},
+		},
+		{
+			{Orange, 0},
+			{Orange, 0},
+			{Orange, Orange},
+		},
+		{
+			{Orange, Orange, Orange},
+			{Orange, 0, 0},
+		},
+		{
+			{Orange, Orange},
+			{0, Orange},
+			{0, Orange},
 		},
 	},
 }
