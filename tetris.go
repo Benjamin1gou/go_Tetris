@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"image/color" // 色を扱うパッケージ
 	"math/rand"   // 乱数を扱うパッケージ
 	"time"        // 時間を扱うパッケージ
@@ -164,6 +165,7 @@ func NewTetromino() *Tetromino {
 type Game struct {
 	board            [boardHeight][boardWidth]Color // ゲームボード
 	currentTetromino *Tetromino                     // 現在操作しているテトリスミノ
+	nextTetromino    *Tetromino                     // 次に生成されるテトリスミノ
 	currentFrame     int                            // フレーム数
 	dropInterval     int                            // インターバル
 }
@@ -194,7 +196,8 @@ func (g *Game) placeTetromino() {
 			}
 		}
 	}
-	g.currentTetromino = NewTetromino()
+	g.currentTetromino = g.nextTetromino // 現在の「次のテトロミノ」を「現在のテトロミノ」にセット
+	g.nextTetromino = NewTetromino()     // 新しい「次のテトロミノ」を生成
 	if g.collision(g.currentTetromino, g.currentTetromino.x, g.currentTetromino.y) {
 		// 新しいテトリスミノが配置できない場合はゲームをリセット
 		g.board = [boardHeight][boardWidth]Color{}
@@ -279,6 +282,17 @@ func (g *Game) Draw(screen *ebiten.Image) {
 			}
 		}
 	}
+	ebitenutil.DebugPrint(screen, fmt.Sprintf("Next Tetromino: %+v", g.nextTetromino.currentShape))
+	// 次のテトロミノを描画
+	offsetX := (boardWidth + 2) * cellSize // 例: ボードの右側に表示
+	offsetY := 0                           // 上端に表示
+	for y, row := range g.nextTetromino.currentShape {
+		for x, cell := range row {
+			if cell != Empty {
+				drawCell(screen, offsetX/cellSize+x, offsetY/cellSize+y, cell)
+			}
+		}
+	}
 }
 
 // セルを描画する関数
@@ -317,6 +331,7 @@ func main() {
 	rand.Seed(time.Now().UnixNano()) // 乱数のシードを設定
 	game := &Game{                   // Gameの新しいインスタンスを作成
 		currentTetromino: NewTetromino(), // 初期のテトリスミノを設定
+		nextTetromino:    NewTetromino(), // 次に生成されるミノを設定
 		dropInterval:     60,             // 落下インターバルのフレーム数を設定
 	}
 	ebiten.RunGame(game) // ゲームループを開始
